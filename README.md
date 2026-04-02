@@ -253,18 +253,74 @@ The `user-attachments/assets/` URLs require authentication for private repos. Th
 
 ---
 
+## Claude Code skill integration
+
+`gh-embed-image` integrates with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skills to automate screenshot capture and PR embedding during frontend development.
+
+### Quick setup
+
+Copy the example skill to your Claude Code commands directory:
+
+```bash
+cp examples/claude-skills/screenshot-to-pr.md ~/.claude/commands/
+```
+
+Then use it from any project:
+
+```
+/screenshot-to-pr http://localhost:3000/dashboard 42
+```
+
+Claude will capture a Playwright screenshot, upload it via `gh-embed-image`, and embed it in PR #42.
+
+### Example skills included
+
+| Skill | Description |
+|-------|-------------|
+| `screenshot-to-pr.md` | Quick capture: screenshot a URL and embed in a PR. Handles auth via headed browser fallback. |
+| `document-ui-changes.md` | Full before/after workflow: checkout main, capture BEFORE, checkout PR branch, capture AFTER, upload all, build comparison table in PR. |
+
+Both skills are in [`examples/claude-skills/`](examples/claude-skills/).
+
+### How it fits together
+
+```
+Developer working on frontend
+  │
+  ├─ Makes UI changes on a branch
+  ├─ Opens a PR
+  │
+  ├─ /screenshot-to-pr http://localhost:3000 42
+  │   ├─ Playwright captures screenshot
+  │   ├─ gh-embed-image uploads to GitHub assets
+  │   └─ Image embedded inline in PR #42
+  │
+  └─ /document-ui-changes 42
+      ├─ Checks out main → captures BEFORE screenshots
+      ├─ Checks out PR branch → captures AFTER screenshots
+      ├─ Uploads all via gh-embed-image
+      └─ Builds before/after comparison table in PR
+```
+
+The `playwright-auth` skill pattern is used when the local app requires SSO/login — it launches a headed browser for the user to authenticate, saves the session to `/tmp/pw-auth.json`, and reuses it for headless screenshots.
+
+---
+
 ## Architecture
 
 ```
-gh-embed-image              # Bash entry point: arg parsing, PR body editing via gh CLI
-lib/upload.mjs              # Node.js/Playwright: session management, 3-step upload flow
-lib/render-diagram.mjs      # Helper: render HTML to PNG (for README diagrams)
-test/upload.test.mjs        # Unit tests: CLI validation, security invariants
-docs/                       # HTML source for diagrams
-.github/workflows/ci.yml    # CI: lint, test, security audit (actions pinned to SHAs)
-.github/dependabot.yml      # Automated dependency update PRs
-SECURITY.md                 # Vulnerability reporting policy
-CONTRIBUTING.md             # Contribution and security review guidelines
+gh-embed-image                              # Bash entry point: arg parsing, PR body editing via gh CLI
+lib/upload.mjs                              # Node.js/Playwright: session management, 3-step upload flow
+lib/render-diagram.mjs                      # Helper: render HTML to PNG (for README diagrams)
+test/upload.test.mjs                        # Unit tests: CLI validation, security invariants
+examples/claude-skills/                     # Claude Code skill definitions
+  screenshot-to-pr.md                       #   Quick screenshot + embed
+  document-ui-changes.md                    #   Full before/after workflow
+docs/                                       # HTML source for diagrams
+.github/workflows/ci.yml                    # CI: lint, test, security audit (actions pinned to SHAs)
+.github/dependabot.yml                      # Automated dependency update PRs
+SECURITY.md                                 # Vulnerability reporting policy
+CONTRIBUTING.md                             # Contribution and security review guidelines
 ```
 
 Session state is managed via Playwright's `storageState` API, which serializes/deserializes browser cookies and localStorage to a JSON file at `~/.config/gh-embed-image/session.json`.
