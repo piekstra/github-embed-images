@@ -1,6 +1,6 @@
 {
   "name": "gh-embed-image",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Upload images to GitHub's native asset storage from the CLI — same as pasting in the web UI",
   "type": "module",
   "scripts": {

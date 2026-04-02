@@ -3,6 +3,7 @@ name: Release & Update Homebrew
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
