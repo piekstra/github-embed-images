@@ -4,7 +4,9 @@ Upload images to GitHub's native asset storage (`user-attachments/assets/`) from
 
 Built for embedding Playwright screenshots in PR descriptions so reviewers see them inline.
 
-<!-- TODO: Dogfood — embed CLI usage screenshot here using the tool itself -->
+> The images in this README were uploaded using this tool.
+
+![cli-usage](https://github.com/user-attachments/assets/d7da1429-bb83-4073-997f-431b75348996)
 
 ---
 
@@ -91,7 +93,7 @@ The upload flow requires extracting a CSRF `uploadToken` from the GitHub repo pa
 
 The tool replicates the exact browser upload flow that GitHub's web UI uses when you paste an image:
 
-<!-- TODO: Dogfood — embed flow diagram here using the tool itself -->
+![flow-diagram](https://github.com/user-attachments/assets/eea1757a-32da-4727-81dd-e63af35f39ea)
 
 1. **Extract Token** — Navigate to the target repo page, parse the `uploadToken` from embedded `<script>` tags
 2. **Get Upload Policy** — `POST /upload/policies/assets` with file metadata and CSRF token. Returns S3 presigned upload URL, form fields, and asset metadata
