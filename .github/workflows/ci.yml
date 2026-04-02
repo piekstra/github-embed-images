@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies (locked)
+        run: npm ci
+
+      - name: Lint JavaScript
+        run: npx eslint 'lib/**/*.mjs' 'test/**/*.mjs'
+
+      - name: Lint Bash
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck gh-embed-image
+
+      - name: Run unit tests
+        run: node --test test/upload.test.mjs
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (locked)
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Verify lockfile integrity
+        run: |
+          # Ensure package-lock.json is in sync with package.json
+          npm ci --ignore-scripts
+          git diff --exit-code package-lock.json || {
+            echo "::error::package-lock.json is out of sync with package.json"
+            exit 1
+          }
+
+      - name: Check for hardcoded secrets
+        run: |
+          if grep -rn 'gho_\|ghp_\|github_pat_\|sk-\|AKIA' lib/ gh-embed-image; then
+            echo "::error::Hardcoded secrets detected in source code"
+            exit 1
+          fi
+          echo "No hardcoded secrets found"
+
+      - name: Verify session.json is gitignored
+        run: |
+          if ! grep -q 'session.json' .gitignore; then
+            echo "::error::session.json must be in .gitignore"
+            exit 1
+          fi

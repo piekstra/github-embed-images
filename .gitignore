@@ -1,0 +1,6 @@
+node_modules/
+.claude/
+.twapp-*
+
+# Session state contains GitHub authentication cookies
+session.json

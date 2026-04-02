@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 24px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .prompt { color: #6a9955; }
+  .cmd { color: #dcdcaa; }
+  .flag { color: #9cdcfe; }
+  .arg { color: #ce9178; }
+  .output { color: #569cd6; }
+  .comment { color: #6a9955; font-style: italic; }
+  .muted { color: #808080; }
+  .separator { color: #808080; margin: 12px 0; }
+  .highlight { color: #4ec9b0; }
+</style>
+</head>
+<body>
+<div class="comment"># First-time setup: log in to GitHub</div>
+<div><span class="prompt">$</span> <span class="cmd">./gh-embed-image</span> <span class="flag">--login</span></div>
+<div class="muted">Log in to GitHub in the browser window...</div>
+<div class="muted">Once logged in, the browser will close automatically.</div>
+<div class="muted">Login successful! Session saved.</div>
+
+<div class="separator">─────────────────────────────────────────────</div>
+
+<div class="comment"># Upload a screenshot — get markdown URL on stdout</div>
+<div><span class="prompt">$</span> <span class="cmd">./gh-embed-image</span> <span class="arg">dashboard.png</span></div>
+<div class="output">![dashboard](https://github.com/user-attachments/assets/2a0db2d0-22ff-40bf-a7c0-c7988a1dc54c)</div>
+
+<div class="separator">─────────────────────────────────────────────</div>
+
+<div class="comment"># Embed directly into a PR description</div>
+<div><span class="prompt">$</span> <span class="cmd">./gh-embed-image</span> <span class="flag">--pr</span> <span class="highlight">42</span> <span class="arg">before.png</span> <span class="arg">after.png</span></div>
+<div class="muted">Added 2 image(s) to PR #42 description</div>
+
+<div class="separator">─────────────────────────────────────────────</div>
+
+<div class="comment"># Compose with gh pr create</div>
+<div><span class="prompt">$</span> <span class="highlight">IMGS</span>=$(<span class="cmd">./gh-embed-image</span> <span class="arg">screenshot.png</span>)</div>
+<div><span class="prompt">$</span> <span class="cmd">gh pr create</span> <span class="flag">--title</span> <span class="arg">"Fix layout"</span> <span class="flag">--body</span> <span class="arg">"## Screenshots</span></div>
+<div class="arg">  $IMGS"</div>
+</body>
+</html>

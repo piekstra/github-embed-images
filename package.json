@@ -1,0 +1,18 @@
+{
+  "name": "gh-embed-image",
+  "version": "0.1.0",
+  "description": "Upload images to GitHub's native asset storage from the CLI — same as pasting in the web UI",
+  "type": "module",
+  "scripts": {
+    "login": "node lib/upload.mjs --login",
+    "test": "npm run lint && npm run test:unit",
+    "test:unit": "node --test test/upload.test.mjs",
+    "lint": "npx eslint 'lib/**/*.mjs' 'test/**/*.mjs' && shellcheck gh-embed-image"
+  },
+  "keywords": ["github", "images", "pr", "screenshots", "upload"],
+  "author": "piekstra",
+  "license": "MIT",
+  "dependencies": {
+    "playwright-core": "1.59.1"
+  }
+}

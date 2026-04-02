@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UPLOAD_SCRIPT="$SCRIPT_DIR/lib/upload.mjs"
+
+usage() {
+  cat <<'EOF'
+Usage: gh-embed-image [OPTIONS] <image> [image...]
+
+Upload images to GitHub's native asset storage and output markdown image URLs.
+Uses the same upload mechanism as pasting images in the GitHub web UI.
+
+Options:
+  --login        Open a browser to log in to GitHub (required on first use)
+  --repo OWNER/REPO  Target repository (default: inferred from git remote)
+  --pr NUMBER    Append images to a PR description
+  --comment      Post images as a PR comment (requires --pr)
+  -h, --help     Show this help
+
+Examples:
+  # First-time setup (opens browser for GitHub login)
+  gh-embed-image --login
+
+  # Upload and get markdown URLs
+  gh-embed-image screenshot.png
+  gh-embed-image before.png after.png
+
+  # Upload and embed in a PR description
+  gh-embed-image --pr 42 screenshot.png
+
+  # Upload and post as a PR comment
+  gh-embed-image --pr 42 --comment screenshot.png
+EOF
+}
+
+# Parse arguments
+LOGIN=false
+REPO=""
+PR=""
+COMMENT=false
+IMAGES=()
+NODE_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --login)
+      LOGIN=true
+      NODE_ARGS+=("--login")
+      shift
+      ;;
+    --repo)
+      REPO="$2"
+      NODE_ARGS+=("--repo" "$2")
+      shift 2
+      ;;
+    --pr)
+      PR="$2"
+      shift 2
+      ;;
+    --comment)
+      COMMENT=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -*)
+      echo "Error: Unknown option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+    *)
+      IMAGES+=("$1")
+      NODE_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# Login-only mode
+if [[ "$LOGIN" == "true" && ${#IMAGES[@]} -eq 0 ]]; then
+  node "$UPLOAD_SCRIPT" --login
+  exit 0
+fi
+
+# Need at least one image (unless just logging in)
+if [[ ${#IMAGES[@]} -eq 0 ]]; then
+  echo "Error: No images specified." >&2
+  usage >&2
+  exit 1
+fi
+
+# Validate files exist
+for img in "${IMAGES[@]}"; do
+  if [[ ! -f "$img" ]]; then
+    echo "Error: File not found: $img" >&2
+    exit 1
+  fi
+done
+
+# Run the upload
+MARKDOWN=$(node "$UPLOAD_SCRIPT" "${NODE_ARGS[@]}")
+
+if [[ -z "$MARKDOWN" ]]; then
+  echo "Error: Upload produced no output." >&2
+  exit 1
+fi
+
+# If no PR specified, just output the markdown
+if [[ -z "$PR" ]]; then
+  echo "$MARKDOWN"
+  exit 0
+fi
+
+# Resolve repo for gh commands
+if [[ -z "$REPO" ]]; then
+  REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null) || {
+    echo "Error: Could not determine repo. Use --repo owner/repo." >&2
+    exit 1
+  }
+fi
+
+if [[ "$COMMENT" == "true" ]]; then
+  # Post as a comment
+  gh pr comment "$PR" --repo "$REPO" --body "$MARKDOWN"
+  echo "Posted ${#IMAGES[@]} image(s) as comment on PR #$PR" >&2
+else
+  # Append to PR description
+  CURRENT_BODY=$(gh pr view "$PR" --repo "$REPO" --json body -q .body)
+
+  if echo "$CURRENT_BODY" | grep -q "## Screenshots"; then
+    # Append under existing Screenshots section
+    NEW_BODY="${CURRENT_BODY}
+${MARKDOWN}"
+  else
+    # Add new Screenshots section
+    NEW_BODY="${CURRENT_BODY}
+
+## Screenshots
+
+${MARKDOWN}"
+  fi
+
+  gh pr edit "$PR" --repo "$REPO" --body "$NEW_BODY"
+  echo "Added ${#IMAGES[@]} image(s) to PR #$PR description" >&2
+fi
