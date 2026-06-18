@@ -13,6 +13,6 @@
   "author": "piekstra",
   "license": "MIT",
   "dependencies": {
-    "playwright-core": "1.60.0"
+    "playwright-core": "1.61.0"
   }
 }
