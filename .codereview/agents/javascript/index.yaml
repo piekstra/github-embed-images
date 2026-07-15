@@ -1,0 +1,3 @@
+name: javascript
+description: Review agents for JavaScript/Node.js implementation quality, idioms, and behavioral test coverage.
+owner: piekstra
