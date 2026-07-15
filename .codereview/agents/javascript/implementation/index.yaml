@@ -1,0 +1,18 @@
+name: implementation
+description: Reviews JavaScript/TypeScript changes for idiomatic implementation, async and error correctness, resource safety, and tests that prove the changed behavior.
+model_tier: medium
+effort: medium
+file_globs:
+  - "**/*.js"
+  - "**/*.mjs"
+  - "**/*.cjs"
+  - "**/*.ts"
+  - "**/*.mts"
+  - "**/*.cts"
+  - "**/*.jsx"
+  - "**/*.tsx"
+  - "package.json"
+applies_when:
+  - A change touches JavaScript/TypeScript implementation, CLI or module surface, dependencies, or behavior that should be proven by tests.
+  - Do not select for test-only changes unless the diff alters an async, error-handling, or resource-management pattern, or for concerns owned by a dedicated policy or structure reviewer.
+needs_full_file_content: false
