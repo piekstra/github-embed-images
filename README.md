@@ -25,10 +25,9 @@ On first use, you log in to GitHub via a browser window. The resulting session c
 **This file grants full GitHub access as your user.** Anyone who reads it can act as you on GitHub — create repos, push code, delete things, access private repos.
 
 **Mitigations:**
-- The file is created with default user-only permissions (`0644`). Consider tightening to `0600`:
-  ```bash
-  chmod 600 ~/.config/gh-embed-image/session.json
-  ```
+- The file is created owner-only (`0600`, directory `0700`), and permissions
+  are re-tightened on every session save — files created by older versions are
+  repaired the first time the tool writes the session again.
 - Do not commit, share, or back up this file to cloud storage
 - Run `gh-embed-image --login` periodically to rotate the session
 - Delete the file when not actively using the tool:
