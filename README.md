@@ -1,5 +1,29 @@
 # gh-embed-image
 
+> ## ⚠️ Retired — this tool is no longer needed
+>
+> As of **August 2026**, GitHub's upload endpoint accepts a **bearer token
+> directly**, so a browser session is no longer required to get a
+> `user-attachments/assets/` URL. This tool existed only to scrape that
+> browser session token from the repo web page — a mechanism that has since
+> broken (`Could not extract uploadToken from the repo page`) and is no longer
+> maintained. **This repository is archived.**
+>
+> **Do this instead — one `gh` call, auth handled internally, no browser:**
+>
+> ```sh
+> RID=$(gh api repos/OWNER/REPO --jq .id)
+> gh api --method POST \
+>   -H "Content-Type: image/png" -H "Accept: application/json" \
+>   "https://uploads.github.com/user-attachments/assets?name=shot.png&content_type=image/png&repository_id=$RID" \
+>   --input shot.png
+> # -> {"url":"https://github.com/user-attachments/assets/<uuid>"}
+> # embed that URL: gh pr edit N --body "![alt](<url>)"
+> ```
+>
+> The endpoint is still undocumented, but token-authenticated and stable. See
+> [island94.org's writeup](https://island94.org/2026/08/programmatically-upload-attachments-to-github-issues-pull-requests-comments).
+
 Upload images to GitHub's native asset storage (`user-attachments/assets/`) from the CLI. Produces the same `![](https://github.com/user-attachments/assets/...)` URLs as pasting an image in the GitHub web UI.
 
 Built for embedding Playwright screenshots in PR descriptions so reviewers see them inline.
